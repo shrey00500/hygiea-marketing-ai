@@ -125,27 +125,27 @@ export default function ChatInterface({ title, description }) {
   };
 
   return (
-    <div className="flex flex-col h-full max-w-5xl mx-auto p-6">
-      <div className="mb-6">
-        <h2 className="text-3xl font-bold text-sage-900 tracking-tight">{title}</h2>
-        <p className="text-sage-600 mt-2">{description}</p>
+    <div className="flex flex-col h-full max-w-5xl mx-auto p-4 md:p-6">
+      <div className="mb-4 md:mb-6 px-1">
+        <h2 className="text-2xl md:text-3xl font-bold text-sage-900 tracking-tight">{title}</h2>
+        <p className="text-sm md:text-base text-sage-600 mt-1 md:mt-2">{description}</p>
       </div>
 
       <div className="flex-1 glass-panel rounded-2xl flex flex-col overflow-hidden relative shadow-xl shadow-sage-200/20">
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6">
           {messages.map((msg) => (
             <div 
               key={msg.id} 
-              className={`flex gap-4 max-w-[85%] ${msg.role === 'user' ? 'ml-auto flex-row-reverse' : ''}`}
+              className={`flex gap-3 md:gap-4 max-w-[92%] md:max-w-[85%] ${msg.role === 'user' ? 'ml-auto flex-row-reverse' : ''}`}
             >
-              <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${
+              <div className={`flex-shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center shadow-sm ${
                 msg.role === 'user' 
                   ? 'bg-terracotta-500 text-white' 
                   : 'bg-sage-600 text-white'
               }`}>
-                {msg.role === 'user' ? <User size={18} /> : <Sparkles size={18} />}
+                {msg.role === 'user' ? <User size={14} /> : <Sparkles size={14} />}
               </div>
-              <div className={`p-4 rounded-2xl ${
+              <div className={`p-3 md:p-4 rounded-2xl text-sm md:text-base ${
                 msg.role === 'user' 
                   ? 'bg-terracotta-500 text-white rounded-tr-sm' 
                   : 'bg-white text-sage-800 rounded-tl-sm shadow-sm border border-sage-100'
@@ -155,19 +155,19 @@ export default function ChatInterface({ title, description }) {
             </div>
           ))}
           {isLoading && (
-            <div className="flex gap-4 max-w-[85%]">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-sm bg-sage-600 text-white">
-                <Sparkles size={18} />
+            <div className="flex gap-3 md:gap-4 max-w-[92%] md:max-w-[85%]">
+              <div className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center shadow-sm bg-sage-600 text-white">
+                <Sparkles size={14} />
               </div>
-              <div className="p-4 rounded-2xl bg-white text-sage-800 rounded-tl-sm shadow-sm border border-sage-100 flex items-center">
-                <Loader2 size={20} className="animate-spin text-sage-400" />
+              <div className="p-3 md:p-4 rounded-2xl bg-white text-sage-800 rounded-tl-sm shadow-sm border border-sage-100 flex items-center">
+                <Loader2 size={18} className="animate-spin text-sage-400" />
               </div>
             </div>
           )}
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="p-4 bg-white/50 backdrop-blur-md border-t border-sage-100">
+        <div className="p-3 md:p-4 bg-white/50 backdrop-blur-md border-t border-sage-100">
           <form onSubmit={handleSend} className="relative flex items-center">
             <input
               type="text"
@@ -175,17 +175,17 @@ export default function ChatInterface({ title, description }) {
               onChange={(e) => setInput(e.target.value)}
               disabled={isLoading}
               placeholder="Type your message..."
-              className="w-full bg-white border border-sage-200 rounded-xl py-4 pl-6 pr-14 text-sage-800 placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-terracotta-400 focus:border-transparent transition-all shadow-sm disabled:opacity-50"
+              className="w-full bg-white border border-sage-200 rounded-xl py-3 md:py-4 pl-4 md:pl-6 pr-12 md:pr-14 text-sm md:text-base text-sage-800 placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-terracotta-400 focus:border-transparent transition-all shadow-sm disabled:opacity-50"
             />
             <button 
               type="submit"
               disabled={!input.trim() || isLoading}
-              className="absolute right-3 p-2 bg-terracotta-500 hover:bg-terracotta-600 disabled:bg-sage-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors shadow-sm"
+              className="absolute right-2 md:right-3 p-2 bg-terracotta-500 hover:bg-terracotta-600 disabled:bg-sage-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors shadow-sm"
             >
-              {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} className="translate-x-[1px] translate-y-[1px]" />}
+              {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} className="translate-x-[0.5px] translate-y-[0.5px]" />}
             </button>
           </form>
-          <p className="text-center text-xs text-sage-400 mt-3">
+          <p className="text-center text-[10px] md:text-xs text-sage-400 mt-2 md:mt-3">
             AI-generated wellness insights. Always verify important information.
           </p>
         </div>
