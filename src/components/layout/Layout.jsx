@@ -33,7 +33,7 @@ export default function Layout() {
   };
 
   return (
-    <div className="flex h-screen w-full bg-sand-50 overflow-hidden font-sans">
+    <div className="flex h-[100dvh] w-full bg-sand-50 overflow-hidden font-sans">
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
@@ -59,7 +59,7 @@ export default function Layout() {
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-terracotta-100/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-sage-100/40 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4 pointer-events-none" />
         
-        <div className="flex-1 relative z-10 w-full h-full overflow-y-auto">
+        <div className="flex-1 relative z-10 w-full min-h-0 overflow-y-auto">
           {renderContent()}
         </div>
       </main>

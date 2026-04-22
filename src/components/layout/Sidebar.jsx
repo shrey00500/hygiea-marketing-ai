@@ -32,7 +32,7 @@ export default function Sidebar({ activeTab, setActiveTab, mobileOpen, setMobile
 
       {/* Sidebar Container */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-sage-800 text-sand-50 h-screen flex flex-col shadow-xl 
+        fixed inset-y-0 left-0 z-50 w-64 bg-sage-800 text-sand-50 h-[100dvh] flex flex-col shadow-xl 
         transition-transform duration-300 transform lg:translate-x-0 lg:static lg:inset-auto
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
