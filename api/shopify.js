@@ -1,105 +1,65 @@
 // /api/shopify.js
 export default async function handler(req, res) {
-  try {
-    let domain = process.env.VITE_SHOPIFY_DOMAIN || process.env.SHOPIFY_STORE_URL;
-    const token = process.env.SHOPIFY_API_TOKEN;
+  const domain = process.env.VITE_SHOPIFY_DOMAIN;
+  const token = process.env.SHOPIFY_API_TOKEN;
 
-    if (!domain || !token) {
-      return res.status(200).json({ 
-        error: `Missing Config: Domain=${!!domain}, Token=${!!token}`,
-        revenue: "Error",
-        orders: "Missing Keys",
-        products: []
-      });
-    }
+  if (!domain || !token) {
+    return res.status(200).json({ 
+      error: 'Missing Shopify Credentials in Vercel.',
+      products: [] 
+    });
+  }
 
-    // Clean domain
-    domain = domain.replace(/^https?:\/\//, '').replace(/\/$/, '');
-    if (!domain.includes('.')) domain = `${domain}.myshopify.com`;
+  // Use the exact version and endpoint requested
+  const endpoint = `https://${domain}/api/2026-01/graphql.json`;
 
-    // Detect Token Type
-    const isAdminToken = token.startsWith('shpat_');
-    const endpoint = isAdminToken 
-      ? `https://${domain}/admin/api/2024-04/graphql.json`
-      : `https://${domain}/api/2024-04/graphql.json`;
-    
-    const authHeader = isAdminToken ? 'X-Shopify-Access-Token' : 'X-Shopify-Storefront-Access-Token';
-    const priceQuery = isAdminToken ? 'price' : 'price { amount }';
-
-    const query = `{
-      products(first: 5) {
-        edges {
-          node {
-            id
-            title
-            variants(first: 1) {
-              edges {
-                node {
-                  ${priceQuery}
-                }
-              }
-            }
-          }
+  const query = `{
+    products(first: 5) {
+      edges {
+        node {
+          id
+          title
         }
       }
-    }`;
+    }
+  }`;
 
-    console.log(`Detecting ${isAdminToken ? 'Admin' : 'Storefront'} Token. Fetching from: ${endpoint}`);
-
+  try {
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        [authHeader]: token,
+        'X-Shopify-Storefront-Access-Token': token,
       },
       body: JSON.stringify({ query }),
     });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      return res.status(200).json({ 
-        error: `Shopify HTTP ${response.status}: ${errorText.substring(0, 100)}`,
-        revenue: "Check Token",
-        orders: "Failed",
-        products: []
-      });
-    }
 
     const result = await response.json();
     
     if (result.errors) {
       return res.status(200).json({ 
-        error: `GraphQL Error: ${result.errors[0].message}`,
-        revenue: "Fix Query",
-        orders: "Failed",
-        products: []
+        error: result.errors[0].message,
+        products: [] 
       });
     }
 
     const products = result.data?.products?.edges || [];
-    const liveProducts = products.map(p => {
-      const variant = p.node.variants?.edges[0]?.node;
-      const priceAmount = variant?.price?.amount || variant?.price || "0";
-      return {
-        name: p.node.title || "Unknown Product",
-        revenue: `₹${priceAmount}`,
-        sold: 'Live Sync'
-      };
-    });
+    const liveProducts = products.map(p => ({
+      name: p.node.title,
+      revenue: 'Live',
+      sold: 'Active'
+    }));
 
     return res.status(200).json({
-      revenue: "Syncing...", 
-      orders: "Connected",   
+      revenue: 'Syncing...',
+      orders: 'Connected',
       products: liveProducts
     });
 
   } catch (err) {
-    console.error('CRITICAL BACKEND ERROR:', err);
     return res.status(200).json({ 
-      error: `System Error: ${err.message}`,
-      revenue: "Crashed",
-      orders: "Failed",
-      products: []
+      error: `Fetch Failed: ${err.message}`,
+      products: [] 
     });
   }
 }
