@@ -7,43 +7,41 @@ export default function AnalyticsPage() {
   const [orders, setOrders] = useState('0');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false);
 
   useEffect(() => {
-    fetchData();
+    handleFetch();
   }, []);
 
-  const fetchData = async () => {
+  const handleFetch = async () => {
     setLoading(true);
     setError(null);
+    setHasAttemptedFetch(true);
+    
+    console.log('Fetching from backend...');
+    
     try {
       const response = await fetch('/api/shopify');
-      let result;
+      const data = await response.json();
       
-      try {
-        result = await response.json();
-      } catch (e) {
-        throw new Error(`Invalid Response: ${response.status} ${response.statusText}`);
-      }
+      console.log('Backend Response:', data);
       
       if (!response.ok) {
-        throw new Error(result.error || `Server Error: ${response.status}`);
+        throw new Error(data.error || `Server Error: ${response.status}`);
       }
       
-      // Always check for a diagnostic error from our backend
-      if (result.error) {
-        setError(result.error);
-      }
+      // Update state
+      if (data.products) setProducts(data.products);
+      if (data.revenue) setRevenue(data.revenue);
+      if (data.orders) setOrders(data.orders);
       
-      // Update state based on the new structure in /api/shopify.js
-      if (result.products) {
-        setProducts(result.products);
+      // If we got a specific error message in the JSON but status was 200 (diagnostic mode)
+      if (data.error) {
+        setError(data.error);
       }
-      if (result.revenue) setRevenue(result.revenue);
-      if (result.orders) setOrders(result.orders);
       
     } catch (err) {
       console.error('Fetch Error:', err);
-      // Try to extract more specific error message from the response if available
       setError(err.message || 'Could not connect to Shopify. Please check your credentials.');
     } finally {
       setLoading(false);
@@ -61,7 +59,7 @@ export default function AnalyticsPage() {
         </div>
         
         <button
-          onClick={fetchData}
+          onClick={handleFetch}
           disabled={loading}
           className="flex items-center justify-center gap-2 px-8 py-4 bg-gold-500 hover:bg-gold-600 disabled:bg-sage-300 text-white rounded-2xl font-bold transition-all shadow-lg shadow-gold-200 active:scale-95"
         >
@@ -133,7 +131,9 @@ export default function AnalyticsPage() {
                 </div>
               )) : (
                 <div className="text-center py-20 bg-sage-50/50 rounded-2xl border border-dashed border-sage-200 text-sage-400 italic">
-                  No product data fetched yet.
+                  {hasAttemptedFetch && !loading 
+                    ? "Connected: No products published to Headless channel." 
+                    : "No product data fetched yet."}
                 </div>
               )}
             </div>
