@@ -1,22 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { Database, Save, Check } from 'lucide-react';
+import { Database, Save, Check, Loader2 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 
 export default function KnowledgeBank() {
   const [content, setContent] = useState('');
   const [saved, setSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    const storedContent = localStorage.getItem('hygiea_knowledge_bank');
-    if (storedContent) {
-      setContent(storedContent);
-    }
+    const fetchKnowledge = async () => {
+      const { data, error } = await supabase
+        .from('tenant_settings')
+        .select('knowledge_bank')
+        .eq('tenant_name', 'hygiea_admin')
+        .single();
+
+      if (data && !error) {
+        setContent(data.knowledge_bank || '');
+      }
+    };
+
+    fetchKnowledge();
   }, []);
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    localStorage.setItem('hygiea_knowledge_bank', content);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setIsSaving(true);
+    
+    const { error } = await supabase
+      .from('tenant_settings')
+      .upsert({ 
+        tenant_name: 'hygiea_admin',
+        knowledge_bank: content 
+      }, { onConflict: 'tenant_name' });
+
+    setIsSaving(false);
+    if (!error) {
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    }
   };
 
   return (
@@ -24,7 +46,7 @@ export default function KnowledgeBank() {
       <header className="mb-6 md:mb-10 px-1 shrink-0">
         <h1 className="text-2xl md:text-4xl font-bold text-sage-900 tracking-tight">Knowledge Bank</h1>
         <p className="text-sage-600 mt-2">
-          Absolute source of truth. Paste your brand guidelines, product ingredients, ratios, and USPs here. The AI will strictly adhere to this information.
+          Absolute source of truth stored in the cloud. Paste your brand guidelines, product ingredients, ratios, and USPs here.
         </p>
       </header>
 
@@ -49,13 +71,18 @@ export default function KnowledgeBank() {
           <div className="shrink-0">
             <button
               type="submit"
-              disabled={saved}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-terracotta-500 hover:bg-terracotta-600 disabled:bg-sage-300 text-white rounded-xl font-medium transition-all shadow-sm shadow-terracotta-500/20"
+              disabled={saved || isSaving}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-terracotta-500 hover:bg-terracotta-600 disabled:bg-sage-300 text-white rounded-xl font-medium transition-all shadow-sm shadow-terracotta-500/20 min-w-[220px]"
             >
-              {saved ? (
+              {isSaving ? (
+                <>
+                  <Loader2 size={20} className="animate-spin" />
+                  <span>Saving...</span>
+                </>
+              ) : saved ? (
                 <>
                   <Check size={20} />
-                  <span>Saved!</span>
+                  <span>Saved to Cloud!</span>
                 </>
               ) : (
                 <>
