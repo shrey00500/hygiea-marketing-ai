@@ -17,8 +17,14 @@ export default async function handler(req, res) {
     domain = domain.replace(/^https?:\/\//, '').replace(/\/$/, '');
     if (!domain.includes('.')) domain = `${domain}.myshopify.com`;
 
-    const endpoint = `https://${domain}/api/2024-04/graphql.json`;
+    // Detect Token Type
+    const isAdminToken = token.startsWith('shpat_');
+    const endpoint = isAdminToken 
+      ? `https://${domain}/admin/api/2024-04/graphql.json`
+      : `https://${domain}/api/2024-04/graphql.json`;
     
+    const authHeader = isAdminToken ? 'X-Shopify-Access-Token' : 'X-Shopify-Storefront-Access-Token';
+
     const query = `{
       products(first: 5) {
         edges {
@@ -37,13 +43,13 @@ export default async function handler(req, res) {
       }
     }`;
 
-    console.log(`Fetching from: ${endpoint}`);
+    console.log(`Detecting ${isAdminToken ? 'Admin' : 'Storefront'} Token. Fetching from: ${endpoint}`);
 
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Shopify-Storefront-Access-Token': token,
+        [authHeader]: token,
       },
       body: JSON.stringify({ query }),
     });
