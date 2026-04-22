@@ -1,29 +1,25 @@
 // /api/shopify.js
 export default async function handler(req, res) {
-  let domain = process.env.VITE_SHOPIFY_DOMAIN || process.env.SHOPIFY_STORE_URL;
-  const token = process.env.SHOPIFY_API_TOKEN;
+  try {
+    let domain = process.env.VITE_SHOPIFY_DOMAIN || process.env.SHOPIFY_STORE_URL;
+    const token = process.env.SHOPIFY_API_TOKEN;
 
-  if (!domain && !token) {
-    return res.status(400).json({ error: 'Missing BOTH Shopify Domain and Token in Vercel Environment Variables.' });
-  }
-  if (!domain) {
-    return res.status(400).json({ error: 'Missing Shopify Domain (VITE_SHOPIFY_DOMAIN or SHOPIFY_STORE_URL) in Vercel.' });
-  }
-  if (!token) {
-    return res.status(400).json({ error: 'Missing Shopify API Token (SHOPIFY_API_TOKEN) in Vercel.' });
-  }
+    if (!domain || !token) {
+      return res.status(200).json({ 
+        error: `Missing Config: Domain=${!!domain}, Token=${!!token}`,
+        revenue: "Error",
+        orders: "Missing Keys",
+        products: []
+      });
+    }
 
-  // Clean the domain: remove https:// and append .myshopify.com if it's just a slug
-  domain = domain.replace(/^https?:\/\//, '').replace(/\/$/, '');
-  if (!domain.includes('.')) {
-    domain = `${domain}.myshopify.com`;
-  }
+    // Clean domain
+    domain = domain.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    if (!domain.includes('.')) domain = `${domain}.myshopify.com`;
 
-  // Use a stable Storefront API endpoint
-  const endpoint = `https://${domain}/api/2024-04/graphql.json`;
-
-  const query = `
-    {
+    const endpoint = `https://${domain}/api/2024-04/graphql.json`;
+    
+    const query = `{
       products(first: 5) {
         edges {
           node {
@@ -32,20 +28,17 @@ export default async function handler(req, res) {
             variants(first: 1) {
               edges {
                 node {
-                  price {
-                    amount
-                    currencyCode
-                  }
+                  price { amount }
                 }
               }
             }
           }
         }
       }
-    }
-  `;
+    }`;
 
-  try {
+    console.log(`Fetching from: ${endpoint}`);
+
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
@@ -55,25 +48,33 @@ export default async function handler(req, res) {
       body: JSON.stringify({ query }),
     });
 
+    if (!response.ok) {
+      const errorText = await response.text();
+      return res.status(200).json({ 
+        error: `Shopify HTTP ${response.status}: ${errorText.substring(0, 100)}`,
+        revenue: "Check Token",
+        orders: "Failed",
+        products: []
+      });
+    }
+
     const result = await response.json();
     
     if (result.errors) {
-      console.error('Shopify GraphQL Errors:', result.errors);
-      return res.status(500).json({ error: result.errors[0].message });
+      return res.status(200).json({ 
+        error: `GraphQL Error: ${result.errors[0].message}`,
+        revenue: "Fix Query",
+        orders: "Failed",
+        products: []
+      });
     }
 
-    if (!result.data || !result.data.products) {
-      console.error('No data returned from Shopify:', result);
-      return res.status(500).json({ error: 'No product data found. Check token permissions.' });
-    }
-
-    const liveProducts = result.data.products.edges.map(p => {
+    const products = result.data?.products?.edges || [];
+    const liveProducts = products.map(p => {
       const variant = p.node.variants?.edges[0]?.node;
-      const priceAmount = variant?.price?.amount || '0';
-      
       return {
-        name: p.node.title,
-        revenue: `₹${priceAmount}`,
+        name: p.node.title || "Unknown Product",
+        revenue: variant?.price?.amount ? `₹${variant.price.amount}` : "N/A",
         sold: 'Live Sync'
       };
     });
@@ -83,8 +84,14 @@ export default async function handler(req, res) {
       orders: "Connected",   
       products: liveProducts
     });
-  } catch (error) {
-    console.error('Shopify Backend Error:', error);
-    return res.status(500).json({ error: error.message || 'Failed to fetch live data' });
+
+  } catch (err) {
+    console.error('CRITICAL BACKEND ERROR:', err);
+    return res.status(200).json({ 
+      error: `System Error: ${err.message}`,
+      revenue: "Crashed",
+      orders: "Failed",
+      products: []
+    });
   }
 }
