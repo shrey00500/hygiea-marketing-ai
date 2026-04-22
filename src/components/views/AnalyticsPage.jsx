@@ -17,8 +17,11 @@ export default function AnalyticsPage() {
     setError(null);
     try {
       const response = await fetch('/api/shopify');
-      if (!response.ok) throw new Error('Failed to fetch data');
       const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Shopify Connection Failed');
+      }
       
       // Update state based on the new structure in /api/shopify.js
       if (result.products) {
@@ -29,7 +32,8 @@ export default function AnalyticsPage() {
       
     } catch (err) {
       console.error('Fetch Error:', err);
-      setError('Could not connect to Shopify. Please check your credentials.');
+      // Try to extract more specific error message from the response if available
+      setError(err.message || 'Could not connect to Shopify. Please check your credentials.');
     } finally {
       setLoading(false);
     }

@@ -3,6 +3,10 @@ export default async function handler(req, res) {
   const domain = process.env.VITE_SHOPIFY_DOMAIN;
   const token = process.env.SHOPIFY_API_TOKEN;
 
+  if (!domain || !token) {
+    return res.status(400).json({ error: 'Missing Shopify Domain or Token in Environment Variables' });
+  }
+
   // 2026 Storefront API endpoint
   const endpoint = `https://${domain}/api/2026-04/graphql.json`;
 
@@ -41,19 +45,34 @@ export default async function handler(req, res) {
 
     const result = await response.json();
     
-    // If the token is Storefront, we fallback for Revenue/Orders for today's demo
-    const liveProducts = result.data.products.edges.map(p => ({
-      name: p.node.title,
-      revenue: `₹${p.node.variants.edges[0].node.price.amount}`,
-      sold: 'Live Sync'
-    }));
+    if (result.errors) {
+      console.error('Shopify GraphQL Errors:', result.errors);
+      return res.status(500).json({ error: result.errors[0].message });
+    }
+
+    if (!result.data || !result.data.products) {
+      console.error('No data returned from Shopify:', result);
+      return res.status(500).json({ error: 'No product data found. Check token permissions.' });
+    }
+
+    const liveProducts = result.data.products.edges.map(p => {
+      const variant = p.node.variants?.edges[0]?.node;
+      const priceAmount = variant?.price?.amount || '0';
+      
+      return {
+        name: p.node.title,
+        revenue: `₹${priceAmount}`,
+        sold: 'Live Sync'
+      };
+    });
 
     return res.status(200).json({
-      revenue: "Syncing...", // Storefront tokens can't see total revenue
-      orders: "Connected",   // Proving the connection is live
+      revenue: "Syncing...", 
+      orders: "Connected",   
       products: liveProducts
     });
   } catch (error) {
-    return res.status(500).json({ error: 'Failed to fetch live data' });
+    console.error('Shopify Backend Error:', error);
+    return res.status(500).json({ error: error.message || 'Failed to fetch live data' });
   }
 }
