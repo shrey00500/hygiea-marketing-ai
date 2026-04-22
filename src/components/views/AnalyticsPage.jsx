@@ -3,8 +3,8 @@ import { ShoppingCart, IndianRupee, Package, Loader2, RefreshCw, BarChart3, Tren
 
 export default function AnalyticsPage() {
   const [products, setProducts] = useState([]);
-  const [revenue, setRevenue] = useState(0);
-  const [orders, setOrders] = useState(0);
+  const [revenue, setRevenue] = useState('0');
+  const [orders, setOrders] = useState('0');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -17,16 +17,16 @@ export default function AnalyticsPage() {
     setError(null);
     try {
       const response = await fetch('/api/shopify');
-      if (!response.ok) throw new Error('Failed to fetch data from Shopify API');
+      if (!response.ok) throw new Error('Failed to fetch data');
       const result = await response.json();
       
-      if (result.topProducts) {
-        setProducts(result.topProducts);
+      // Update state based on the new structure in /api/shopify.js
+      if (result.products) {
+        setProducts(result.products);
       }
-      if (result.orders) {
-        setRevenue(result.orders.totalRevenue || 0);
-        setOrders(result.orders.count || 0);
-      }
+      if (result.revenue) setRevenue(result.revenue);
+      if (result.orders) setOrders(result.orders);
+      
     } catch (err) {
       console.error('Fetch Error:', err);
       setError('Could not connect to Shopify. Please check your credentials.');
@@ -73,15 +73,15 @@ export default function AnalyticsPage() {
               <div className="p-4 bg-forest-100 text-forest-600 rounded-2xl mb-4">
                 <IndianRupee size={32} />
               </div>
-              <h3 className="text-sage-500 font-medium uppercase tracking-wider text-sm mb-1">Revenue (7 Days)</h3>
-              <p className="text-5xl font-bold text-sage-900">₹{revenue.toLocaleString()}</p>
+              <h3 className="text-sage-500 font-medium uppercase tracking-wider text-sm mb-1">Revenue</h3>
+              <p className="text-5xl font-bold text-sage-900">{revenue}</p>
             </div>
 
             <div className="glass-panel rounded-2xl p-8 flex flex-col items-center justify-center text-center shadow-sm border border-sage-100">
               <div className="p-4 bg-gold-100 text-gold-600 rounded-2xl mb-4">
                 <ShoppingCart size={32} />
               </div>
-              <h3 className="text-sage-500 font-medium uppercase tracking-wider text-sm mb-1">Total Orders</h3>
+              <h3 className="text-sage-500 font-medium uppercase tracking-wider text-sm mb-1">Status</h3>
               <p className="text-5xl font-bold text-sage-900">{orders}</p>
             </div>
           </div>
@@ -92,7 +92,7 @@ export default function AnalyticsPage() {
               <div className="p-2.5 bg-terracotta-100 text-terracotta-600 rounded-xl">
                 <TrendingUp size={24} />
               </div>
-              <h3 className="text-2xl font-bold text-sage-900">Top Products</h3>
+              <h3 className="text-2xl font-bold text-sage-900">Products</h3>
             </div>
 
             <div className="grid grid-cols-1 gap-4">
@@ -103,17 +103,17 @@ export default function AnalyticsPage() {
                       {idx + 1}
                     </div>
                     <div>
-                      <h4 className="font-bold text-sage-900 text-lg">{product.title}</h4>
+                      <h4 className="font-bold text-sage-900 text-lg">{product.name}</h4>
                       <div className="flex items-center gap-3 mt-1">
                         <span className="text-sage-500 text-sm flex items-center gap-1">
-                          <Package size={14} /> {product.sales} available
+                          <Package size={14} /> {product.sold}
                         </span>
                       </div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-sage-400 font-bold uppercase tracking-widest mb-1">Product Revenue</p>
-                    <p className="text-2xl font-bold text-forest-700 font-serif">₹{product.revenue?.toLocaleString()}</p>
+                    <p className="text-xs text-sage-400 font-bold uppercase tracking-widest mb-1">Price</p>
+                    <p className="text-2xl font-bold text-forest-700 font-serif">{product.revenue}</p>
                   </div>
                 </div>
               )) : (
@@ -128,4 +128,5 @@ export default function AnalyticsPage() {
     </div>
   );
 }
+
 
