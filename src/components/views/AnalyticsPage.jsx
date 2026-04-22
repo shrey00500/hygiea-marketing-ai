@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingCart, IndianRupee, Package, Loader2, RefreshCw, BarChart3, TrendingUp, ArrowUpRight } from 'lucide-react';
 
 export default function AnalyticsPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, []);
 
   const fetchAnalytics = async () => {
     setLoading(true);
