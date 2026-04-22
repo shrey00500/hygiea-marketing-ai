@@ -17,10 +17,16 @@ export default function AnalyticsPage() {
     setError(null);
     try {
       const response = await fetch('/api/shopify');
-      const result = await response.json();
+      let result;
+      
+      try {
+        result = await response.json();
+      } catch (e) {
+        throw new Error(`Invalid Response: ${response.status} ${response.statusText}`);
+      }
       
       if (!response.ok) {
-        throw new Error(result.error || 'Shopify Connection Failed');
+        throw new Error(result.error || `Server Error: ${response.status}`);
       }
       
       // Update state based on the new structure in /api/shopify.js

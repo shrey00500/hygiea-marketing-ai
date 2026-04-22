@@ -1,6 +1,6 @@
 // /api/shopify.js
 export default async function handler(req, res) {
-  const domain = process.env.VITE_SHOPIFY_DOMAIN || process.env.SHOPIFY_STORE_URL;
+  let domain = process.env.VITE_SHOPIFY_DOMAIN || process.env.SHOPIFY_STORE_URL;
   const token = process.env.SHOPIFY_API_TOKEN;
 
   if (!domain && !token) {
@@ -13,8 +13,14 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing Shopify API Token (SHOPIFY_API_TOKEN) in Vercel.' });
   }
 
-  // 2026 Storefront API endpoint
-  const endpoint = `https://${domain}/api/2026-04/graphql.json`;
+  // Clean the domain: remove https:// and append .myshopify.com if it's just a slug
+  domain = domain.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  if (!domain.includes('.')) {
+    domain = `${domain}.myshopify.com`;
+  }
+
+  // Use a stable Storefront API endpoint
+  const endpoint = `https://${domain}/api/2024-04/graphql.json`;
 
   const query = `
     {
