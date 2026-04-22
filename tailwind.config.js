@@ -7,6 +7,18 @@ export default {
   theme: {
     extend: {
       colors: {
+        forest: {
+          DEFAULT: '#2D5A27',
+          400: '#387030',
+          500: '#2D5A27',
+          600: '#23461e',
+        },
+        gold: {
+          DEFAULT: '#C5A059',
+          400: '#d1b378',
+          500: '#C5A059',
+          600: '#ab8a4c',
+        },
         sage: {
           50: '#f4f7f4',
           100: '#e5eee5',

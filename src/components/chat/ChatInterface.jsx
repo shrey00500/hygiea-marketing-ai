@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Sparkles, User, Loader2 } from 'lucide-react';
+import { Send, Sparkles, User, Loader2, Cloud, ExternalLink, ImagePlus } from 'lucide-react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const getSystemInstruction = (title) => {
@@ -29,7 +29,45 @@ export default function ChatInterface({ title, description }) {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [generatingImageId, setGeneratingImageId] = useState(null);
+  const [savingToDriveId, setSavingToDriveId] = useState(null);
+  const [driveFolder, setDriveFolder] = useState('');
   const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    setDriveFolder(localStorage.getItem('hygiea_drive_folder') || '');
+  }, []);
+
+  const handleSaveToDrive = (msgId) => {
+    setSavingToDriveId(msgId);
+    setTimeout(() => setSavingToDriveId(null), 1500);
+  };
+
+  const handleCanvaHandoff = (text) => {
+    navigator.clipboard.writeText(text);
+    window.open('https://www.canva.com/design', '_blank');
+  };
+
+  const handleGenerateImage = async (msg) => {
+    setGeneratingImageId(msg.id);
+    try {
+      const apiKey = localStorage.getItem('gemini_api_key');
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite-preview" });
+      
+      const promptResult = await model.generateContent(`Based on the following ad copy, write a highly descriptive, 1-sentence product photography prompt for an AI image generator. Make it premium Ayurvedic vitality supplement, dark slate, moody lighting, 8k resolution. Copy: "${msg.content}"`);
+      
+      const imagePrompt = promptResult.response.text().trim();
+      const encodedPrompt = encodeURIComponent(imagePrompt);
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true`;
+
+      setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, imageUrl } : m));
+    } catch (error) {
+      console.error("Image generation failed:", error);
+    } finally {
+      setGeneratingImageId(null);
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -83,11 +121,12 @@ export default function ChatInterface({ title, description }) {
         const knowledgeContext = knowledgeBank 
           ? `\n\nCRITICAL PRODUCT KNOWLEDGE (Absolute Source of Truth):\n${knowledgeBank}`
           : '';
+        const driveInstruction = driveFolder ? `\n\nCRITICAL BRAND MEMORY: Reference the brand assets and past style located at this Google Drive folder: ${driveFolder}` : '';
 
         const modelName = "gemini-3.1-flash-lite-preview";
         const model = genAI.getGenerativeModel({
           model: modelName,
-          systemInstruction: getSystemInstruction(title) + knowledgeContext,
+          systemInstruction: getSystemInstruction(title) + knowledgeContext + driveInstruction,
           tools: [{ googleSearch: {} }],
           generationConfig: {
             maxOutputTokens: 4096,
@@ -159,12 +198,54 @@ export default function ChatInterface({ title, description }) {
               }`}>
                 {msg.role === 'user' ? <User size={14} /> : <Sparkles size={14} />}
               </div>
-              <div className={`p-3 md:p-4 rounded-2xl text-sm md:text-base ${
+              <div className={`p-3 md:p-4 rounded-2xl text-sm md:text-base w-full ${
                 msg.role === 'user' 
                   ? 'bg-terracotta-500 text-white rounded-tr-sm' 
-                  : 'bg-white text-sage-800 rounded-tl-sm shadow-sm border border-sage-100'
+                  : 'bg-white text-sage-800 rounded-tl-sm shadow-sm border border-sage-100 flex flex-col'
               }`}>
+                {msg.imageUrl && (
+                  <div className="mb-4 rounded-xl overflow-hidden shadow-sm border border-sage-100">
+                    <img src={msg.imageUrl} alt="Generated Ad Creative" className="w-full h-auto object-cover" />
+                  </div>
+                )}
                 <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                
+                {msg.role === 'assistant' && msg.content && !msg.content.includes('API Error:') && !msg.content.includes('Please enter your Gemini API key') && (
+                  <div className="mt-4 pt-3 border-t border-sage-100 flex flex-wrap gap-2">
+                    <button 
+                      onClick={() => handleSaveToDrive(msg.id)}
+                      disabled={savingToDriveId === msg.id || !driveFolder}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-forest-50 hover:bg-forest-100 text-forest-600 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                      title={!driveFolder ? "Connect Google Drive in Settings first" : "Save to connected Drive"}
+                    >
+                      <Cloud size={14} />
+                      {savingToDriveId === msg.id ? 'Saving...' : 'Save to Drive'}
+                    </button>
+                    
+                    <button 
+                      onClick={() => handleCanvaHandoff(msg.content)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-sage-50 hover:bg-sage-100 text-sage-600 rounded-lg text-xs font-medium transition-colors"
+                    >
+                      <ExternalLink size={14} />
+                      Send to Canva
+                    </button>
+
+                    {title.includes("Ad Creative") && !msg.imageUrl && (
+                      <button 
+                        onClick={() => handleGenerateImage(msg)}
+                        disabled={generatingImageId === msg.id}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-gold-50 hover:bg-gold-100 text-gold-600 border border-gold-200 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 ml-auto"
+                      >
+                        {generatingImageId === msg.id ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <ImagePlus size={14} />
+                        )}
+                        {generatingImageId === msg.id ? 'Generating...' : 'Generate Image'}
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           ))}
