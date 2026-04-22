@@ -7,11 +7,13 @@ import {
   Target, 
   Settings,
   X,
-  Database
+  Database,
+  CalendarDays
 } from 'lucide-react';
 
 const navigation = [
   { name: 'Dashboard', id: 'dashboard', icon: LayoutDashboard },
+  { name: 'Daily Feed', id: 'daily-feed', icon: CalendarDays },
   { name: 'Knowledge Bank', id: 'knowledge-bank', icon: Database },
   { name: 'Market Research', id: 'market-research', icon: LineChart },
   { name: 'Content Creator', id: 'content-creator', icon: PenTool },
