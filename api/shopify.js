@@ -24,6 +24,7 @@ export default async function handler(req, res) {
       : `https://${domain}/api/2024-04/graphql.json`;
     
     const authHeader = isAdminToken ? 'X-Shopify-Access-Token' : 'X-Shopify-Storefront-Access-Token';
+    const priceQuery = isAdminToken ? 'price' : 'price { amount }';
 
     const query = `{
       products(first: 5) {
@@ -34,7 +35,7 @@ export default async function handler(req, res) {
             variants(first: 1) {
               edges {
                 node {
-                  price { amount }
+                  ${priceQuery}
                 }
               }
             }
@@ -78,9 +79,10 @@ export default async function handler(req, res) {
     const products = result.data?.products?.edges || [];
     const liveProducts = products.map(p => {
       const variant = p.node.variants?.edges[0]?.node;
+      const priceAmount = variant?.price?.amount || variant?.price || "0";
       return {
         name: p.node.title || "Unknown Product",
-        revenue: variant?.price?.amount ? `₹${variant.price.amount}` : "N/A",
+        revenue: `₹${priceAmount}`,
         sold: 'Live Sync'
       };
     });
