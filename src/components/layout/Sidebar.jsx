@@ -8,11 +8,13 @@ import {
   Settings,
   X,
   Database,
-  CalendarDays
+  CalendarDays,
+  BarChart3
 } from 'lucide-react';
 
 const navigation = [
   { name: 'Dashboard', id: 'dashboard', icon: LayoutDashboard },
+  { name: 'Analytics & Strategy', id: 'analytics', icon: BarChart3 },
   { name: 'Daily Feed', id: 'daily-feed', icon: CalendarDays },
   { name: 'Knowledge Bank', id: 'knowledge-bank', icon: Database },
   { name: 'Market Research', id: 'market-research', icon: LineChart },

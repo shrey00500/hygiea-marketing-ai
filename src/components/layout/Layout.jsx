@@ -4,6 +4,7 @@ import Sidebar from './Sidebar';
 import DashboardOverview from '../views/DashboardOverview';
 import KnowledgeBank from '../views/KnowledgeBank';
 import DailyFeed from '../views/DailyFeed';
+import AnalyticsPage from '../views/AnalyticsPage';
 import ChatInterface from '../chat/ChatInterface';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import MarketResearch from '../views/MarketResearch';
@@ -66,6 +67,8 @@ export default function Layout() {
     switch (activeTab) {
       case 'dashboard':
         return <DashboardOverview />;
+      case 'analytics':
+        return <AnalyticsPage />;
       case 'daily-feed':
         return <DailyFeed />;
       case 'knowledge-bank':
