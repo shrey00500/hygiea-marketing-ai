@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Menu } from 'lucide-react';
 import Sidebar from './Sidebar';
 import DashboardOverview from '../views/DashboardOverview';
+import KnowledgeBank from '../views/KnowledgeBank';
 import ChatInterface from '../chat/ChatInterface';
 import MarketResearch from '../views/MarketResearch';
 import Settings from '../views/Settings';
@@ -14,6 +15,8 @@ export default function Layout() {
     switch (activeTab) {
       case 'dashboard':
         return <DashboardOverview />;
+      case 'knowledge-bank':
+        return <KnowledgeBank />;
       case 'market-research':
         return <MarketResearch />;
       case 'content-creator':

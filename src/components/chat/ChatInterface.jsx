@@ -3,16 +3,24 @@ import { Send, Sparkles, User, Loader2 } from 'lucide-react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const getSystemInstruction = (title) => {
+  const globalPersona = "You are a 'Veteran Performance Marketer' fluent in English and Hinglish. CRITICAL AD COMPLIANCE: Content must strictly adhere to Indian advertising regulations. It must be highly respectful, never vulgar, and never mention or reference 'sexual health' directly. Frame all messaging strictly around 'vitality', 'stamina', 'stress-relief', and 'daily energy'.";
+
+  let tabSpecific = "";
   if (title.includes("Market Research")) {
-    return "You are a data-driven market analyst. Provide concise, actionable insights on competitors and pricing.";
+    tabSpecific = "You are a data-driven market analyst. Provide concise, actionable insights on competitors and pricing.";
   } else if (title.includes("Content Creator")) {
-    return "You write premium, trust-building copy specifically tailored for holistic health and Ayurvedic wellness. Force it to emphasize stress relief, immunity, and muscle recovery rather than generic tropes.";
+    tabSpecific = "You write premium, trust-building copy specifically tailored for holistic health and Ayurvedic wellness. Force it to emphasize stress relief, immunity, and muscle recovery rather than generic tropes.";
   } else if (title.includes("Ad Creative")) {
-    return "You are a direct-response ad strategist. Implement a multi-platform strategy. For Meta/Google: Generate 'Lifestyle-first' copy. Focus on 'stress resilience' and 'daily energy.' Avoid medical claims to ensure 2026 compliance. For Adult Ad Networks (TrafficStars, ClickAdilla): Generate high-intent 'Vitality' copy. Use more aggressive direct-response hooks focusing on performance and stamina. Visual Prompts: For every ad, provide a 1-sentence prompt the user can paste into Canva or Midjourney to generate the matching image. Also, provide hex codes for 'premium wellness' colors (e.g., Forest Green: #2D5A27, Earth Gold: #C5A059).";
+    tabSpecific = "You are a direct-response ad strategist. Implement a multi-platform strategy. For Meta/Google: Generate 'Lifestyle-first' copy. Focus on 'stress resilience' and 'daily energy'. Avoid medical claims to ensure 2026 compliance. For Adult Ad Networks (TrafficStars, ClickAdilla): Generate high-intent 'Vitality' copy. Use more aggressive direct-response hooks focusing on performance and stamina. Visual Prompts: For every ad, provide a 1-sentence prompt the user can paste into Canva or Midjourney to generate the matching image. Also, provide hex codes for 'premium wellness' colors (e.g., Forest Green: #2D5A27, Earth Gold: #C5A059).";
   } else if (title.includes("Campaign Strategy")) {
-    return "You are a media buyer. Suggest budget distribution and targeting for Meta, Google, and alternative ad networks.";
+    tabSpecific = "You are a media buyer. Suggest budget distribution and targeting for Meta, Google, and alternative ad networks.";
+  } else {
+    tabSpecific = "You are a helpful AI assistant for an Ayurvedic wellness brand.";
   }
-  return "You are a helpful AI assistant for an Ayurvedic wellness brand.";
+
+  const groundingInstruction = "Explicitly use live web search/grounding to analyze current social media trends before writing to ensure content stays fresh, relevant, and never repetitive.";
+
+  return `${globalPersona}\n\n${tabSpecific}\n\n${groundingInstruction}`;
 };
 
 export default function ChatInterface({ title, description }) {
@@ -71,10 +79,16 @@ export default function ChatInterface({ title, description }) {
       const history = firstUserIndex !== -1 ? historyRaw.slice(firstUserIndex) : [];
 
       const attemptSendMessage = async (retries = 3) => {
+        const knowledgeBank = localStorage.getItem('hygiea_knowledge_bank') || '';
+        const knowledgeContext = knowledgeBank 
+          ? `\n\nCRITICAL PRODUCT KNOWLEDGE (Absolute Source of Truth):\n${knowledgeBank}`
+          : '';
+
         const modelName = "gemini-3.1-flash-lite-preview";
         const model = genAI.getGenerativeModel({
           model: modelName,
-          systemInstruction: getSystemInstruction(title),
+          systemInstruction: getSystemInstruction(title) + knowledgeContext,
+          tools: [{ googleSearch: {} }],
           generationConfig: {
             maxOutputTokens: 4096,
           }
