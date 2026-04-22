@@ -1,10 +1,16 @@
 // /api/shopify.js
 export default async function handler(req, res) {
-  const domain = process.env.VITE_SHOPIFY_DOMAIN;
+  const domain = process.env.VITE_SHOPIFY_DOMAIN || process.env.SHOPIFY_STORE_URL;
   const token = process.env.SHOPIFY_API_TOKEN;
 
-  if (!domain || !token) {
-    return res.status(400).json({ error: 'Missing Shopify Domain or Token in Environment Variables' });
+  if (!domain && !token) {
+    return res.status(400).json({ error: 'Missing BOTH Shopify Domain and Token in Vercel Environment Variables.' });
+  }
+  if (!domain) {
+    return res.status(400).json({ error: 'Missing Shopify Domain (VITE_SHOPIFY_DOMAIN or SHOPIFY_STORE_URL) in Vercel.' });
+  }
+  if (!token) {
+    return res.status(400).json({ error: 'Missing Shopify API Token (SHOPIFY_API_TOKEN) in Vercel.' });
   }
 
   // 2026 Storefront API endpoint
