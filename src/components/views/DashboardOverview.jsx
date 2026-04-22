@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowUpRight, Users, Activity, TrendingUp, Loader2, ShoppingCart, DollarSign, Package } from 'lucide-react';
+import { ArrowUpRight, Users, Activity, TrendingUp, Loader2, ShoppingCart, IndianRupee, Package } from 'lucide-react';
 
 const stats = [
   { label: 'Active Campaigns', value: '12', increase: '+2.5%', icon: Activity },
@@ -88,7 +88,7 @@ export default function DashboardOverview() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-forest-700">${product.revenue?.toLocaleString()}</p>
+                    <p className="font-bold text-forest-700">₹{product.revenue?.toLocaleString()}</p>
                   </div>
                 </div>
               ))}
@@ -98,7 +98,7 @@ export default function DashboardOverview() {
         
         <div className="glass-panel rounded-2xl p-6 md:p-8 min-h-[300px] md:min-h-[400px] flex flex-col">
           <h3 className="text-lg md:text-xl font-semibold text-sage-900 mb-6 flex items-center gap-2">
-            <DollarSign className="text-forest-500" size={24} />
+            <IndianRupee className="text-forest-500" size={24} />
             7-Day Revenue (GraphQL)
           </h3>
           {loading ? (
@@ -112,7 +112,7 @@ export default function DashboardOverview() {
             </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-sage-400">
-              <p className="text-5xl font-bold text-forest-700 mb-2">${shopifyData?.orders?.totalRevenue?.toLocaleString()}</p>
+              <p className="text-5xl font-bold text-forest-700 mb-2">₹{shopifyData?.orders?.totalRevenue?.toLocaleString()}</p>
               <div className="flex items-center gap-1 text-sm font-medium text-forest-600 bg-forest-50 px-3 py-1.5 rounded-full mb-6">
                 <ArrowUpRight size={16} />
                 {shopifyData?.orders?.trend} vs last week
