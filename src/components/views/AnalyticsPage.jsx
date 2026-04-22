@@ -29,6 +29,11 @@ export default function AnalyticsPage() {
         throw new Error(result.error || `Server Error: ${response.status}`);
       }
       
+      // Always check for a diagnostic error from our backend
+      if (result.error) {
+        setError(result.error);
+      }
+      
       // Update state based on the new structure in /api/shopify.js
       if (result.products) {
         setProducts(result.products);
